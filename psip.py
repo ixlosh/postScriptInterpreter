@@ -1,6 +1,8 @@
 import logging
 logging.basicConfig(level = logging.INFO)
 
+import math
+
 op_stack = []
 dict_stack = []
 dict_stack.append({})
@@ -12,6 +14,11 @@ class ParseFailed(Exception):
 
 class TypeMismatch(Exception):
     """ Exception with types of operators and operands """
+    def __init__(self, message):
+        super().__init__(message)
+
+class DivisionBy0(Exception):
+    """ Exception raised for division by zero """
     def __init__(self, message):
         super().__init__(message)
 
@@ -170,7 +177,7 @@ def copy_operation():
         else:
             raise TypeMismatch("copy requires a non-negative integer argument")
     else:
-        raise TypeMismatch("Operand stack is empty! Nothing to copy")
+        raise TypeMismatch("Stack is empty, nothing to copy")
 
 dict_stack[-1]["copy"] = copy_operation
 
@@ -202,12 +209,112 @@ def div_operation():
             res = op1 / op2
             op_stack.append(res)
         else:
-            raise TypeMismatch("Division by zero error")
+            raise DivisionBy0("Division by zero error")
     else:
         raise TypeMismatch("div operation requires at least to operands")
 
 dict_stack[-1]["div"] = div_operation
 
+def sub_operation():
+    if len(op_stack) >= 2:
+        op1 = op_stack.pop()
+        op2 = op_stack.pop()
+        res = op2 - op1
+        op_stack.append(res)
+    else:
+        raise TypeMismatch("sub operations require at least to operands")
+
+dict_stack[-1]["sub"] = sub_operation
+
+def idiv_operation():
+    if len(op_stack) >= 2:
+        op1 = op_stack.pop()
+        op2 = op_stack.pop()
+        op1 = int(op1) # We do this step to ensure that the values going  
+        op2 = int(op2) # into idiv are also integers and not floats
+        if op1 != 0:
+            res = op2 // op1
+            op_stack.append(res)
+        else:
+            raise DivisionBy0("Division by zero error")
+    else:
+        raise TypeMismatch("idiv requires at least two operands")
+
+dict_stack[-1]["idiv"] = idiv_operation
+
+def mul_operation():
+    if len(op_stack) >= 2:
+        op1 = op_stack.pop()
+        op2 = op_stack.pop()
+        res = op1 * op2
+        op_stack.append(res)
+    else:
+        raise TypeMismatch("mul requires at least to operands")
+
+dict_stack[-1]["mul"] = mul_operation
+
+def abs_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        res = abs(op1)
+        op_stack.append(res)
+    else:
+        raise TypeMismatch("abs requires at least an operand")
+
+dict_stack[-1]["abs"] = abs_operation
+
+def neg_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        res = -op1
+        op_stack.append(res)
+    else:
+        raise TypeMismatch("neg requires at least an operand")
+
+dict_stack[-1]["neg"] = neg_operation
+
+def ceiling_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        res = math.ceil(op1)
+        op_stack.append(res)
+    else:
+        raise TypeMismatch("ceiling requires at least an operand")
+
+dict_stack[-1]["ceiling"] = ceiling_operation
+
+def floor_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        res = math.floor(op1)
+        op_stack.append(res)
+    else:
+        raise TypeMismatch("floor requires at least an operand")
+
+dict_stack[-1]["floor"] = floor_operation
+
+def round_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        res = round(op1)
+        op_stack.append(res)
+    else:
+        raise TypeMismatch("roudn requires at least an operand")
+
+dict_stack[-1]["round"] = round_operation
+
+def sqrt_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        if op1 < 0:
+            raise TypeMismatch("No real sqrt of a negative number exists")
+        else:
+            res = math.sqrt(op1)
+            op_stack.append(res)
+    else:
+        raise TypeMismatch("sqrt requires at least an operand")
+
+dict_stack[-1]["sqrt"] = sqrt_operation
 
 if __name__ == "__main__":
     repl()
