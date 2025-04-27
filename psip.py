@@ -75,7 +75,6 @@ def process_constants(input):
             continue
     raise ParseFailed(f"None of the parsers worked for the input {input}")
 
-
 def add_operation():
     if len(op_stack) >= 2:
         op1 = op_stack.pop()
@@ -134,6 +133,80 @@ def process_input(user_input):
             lookup_in_dictionary(user_input)
         except Exception as e:
             logging.error(e)
+
+# New Operations 
+# I will implement the functions in the order they appear in the command subset document
+
+# Stack Manipulation
+
+def exch_operation():
+    if len(op_stack) >= 2:
+        op1 = op_stack.pop()
+        op2 = op_stack.pop()
+        op_stack.append(op1)
+        op_stack.append(op2)
+    else:
+        raise TypeMismatch("exch requires at least two operands")
+    
+dict_stack[-1]["exch"] = exch_operation
+
+def pop_operation():
+    if len(op_stack) >= 1:
+        op_stack.pop()
+    else:
+        raise TypeMismatch("pop requires at least one operand")
+    
+dict_stack[-1]["pop"] = pop_operation
+
+def copy_operation():
+    if len(op_stack) >= 1:
+        n = op_stack.pop()
+        if isinstance(n, int) and n >= 0:
+            if len(op_stack) >= n:
+                copied_elements = op_stack[-n:]
+                op_stack.extend(copied_elements)
+            else:
+                raise TypeMismatch(f"Requires at least {n} elements to copy")
+        else:
+            raise TypeMismatch("copy requires a non-negative integer argument")
+    else:
+        raise TypeMismatch("Operand stack is empty! Nothing to copy")
+
+dict_stack[-1]["copy"] = copy_operation
+
+def dup_operation():
+    if len(op_stack) >= 1:
+        op_stack.append(op_stack[-1])
+    else:
+        raise TypeMismatch("The stack needs at least one element to duplicate")
+
+dict_stack[-1]["dup"] = dup_operation
+
+def clear_operation():
+    op_stack.clear()
+
+dict_stack[-1]["clear"] = clear_operation
+
+def count_operation():
+    op_stack.append(len(op_stack))
+
+dict_stack[-1]["count"] = count_operation
+
+# Arithmetic Operations
+
+def div_operation():
+    if len(op_stack) >= 2:
+        op1 = op_stack.pop()
+        op2 = op_stack.pop()
+        if op2 != 0:
+            res = op1 / op2
+            op_stack.append(res)
+        else:
+            raise TypeMismatch("Division by zero error")
+    else:
+        raise TypeMismatch("div operation requires at least to operands")
+
+dict_stack[-1]["div"] = div_operation
 
 
 if __name__ == "__main__":
