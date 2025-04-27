@@ -316,5 +316,81 @@ def sqrt_operation():
 
 dict_stack[-1]["sqrt"] = sqrt_operation
 
+# Dictionary Operations
+
+def dict_operation():
+    if len(op_stack) >= 1:
+        capacity = (int)(op_stack.pop())
+        if capacity <= 0:
+            raise TypeMismatch("dict requires a positive integer argument for capacity")
+        new_dict = {i: None for i in range(capacity)}
+        op_stack.append(new_dict)
+    else:
+        raise TypeMismatch("dict requires at least on operand to determine the capacity")
+
+dict_stack[-1]["dict"] = dict_operation
+
+def length_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        if isinstance(op1, dict):
+            res = len(op1)
+            op_stack.append(res)
+        else:
+            raise TypeMismatch("length requires a dictionary operand")
+    else:
+        raise TypeMismatch("length requires at least an operand to determine the length")
+
+dict_stack[-1]["length"] = length_operation
+
+def maxlength_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        if isinstance(op1, dict):
+            keys = list(op1.keys()) # I have opted to go with the keys method to find the max length
+            if keys:
+                min_key = min(keys)
+                max_key = max(keys)
+                capacity = max_key - min_key + 1
+                op_stack.append(capacity)
+            else:
+                op_stack.append(0)
+        else:
+            raise TypeMismatch("maxlength requires a dictionary operand")
+    else:
+        raise TypeMismatch("maxlength requires at least an operand to determine the max length")
+
+dict_stack[-1]["maxlength"] = maxlength_operation
+
+def begin_operation():
+    new_dict = {}
+    dict_stack.append(new_dict)
+
+dict_stack[-1]["begin"] = begin_operation
+
+def end_operation():
+    if len(dict_stack) > 1: # This is to prevent popping the global dictionary
+        dict_stack.pop()
+    else:
+        raise TypeMismatch("No dictionary to end")
+
+dict_stack[-1]["end"] = end_operation
+
+def def_operation():
+    if len(op_stack) >= 2:
+        value = op_stack.pop()
+        name = op_stack.pop()
+        if isinstance(name, str) and name.startswith("/"):
+            key = name[1:]
+            dict_stack[-1][key] = value
+        else:
+            raise TypeMismatch("Defining requires a name starting with a '/'")
+    else:
+        raise TypeMismatch("def requires at least two operands (constant name and variable)")
+    
+dict_stack[-1]["def"] = def_operation
+
+# String Operations
+
 if __name__ == "__main__":
     repl()

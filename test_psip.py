@@ -132,3 +132,78 @@ def test_sqrt_operation():
     psip.process_input("9")
     psip.process_input("sqrt")
     assert psip.op_stack[-1] == 3
+
+def test_dict_operation():
+    psip.op_stack.clear()
+    psip.process_input("3")
+    psip.process_input("dict")
+    result = psip.op_stack[-1]
+    assert isinstance(result, dict)
+    assert len(result) == 3
+
+def test_length_operation():
+    psip.op_stack.clear()
+    psip.process_input("5")
+    psip.process_input("dict")
+    psip.process_input("/key1 1 def")
+    psip.process_input("/key2 2 def")
+    psip.process_input("/key3 3 def")
+    psip.process_input("/key4 4 def")
+    psip.process_input("length")
+    assert psip.op_stack[-1] == 4
+
+def test_maxlength_operation():
+    psip.op_stack.clear()
+    psip.process_input("5")
+    psip.process_input("dict")
+    psip.process_input("/key1 1 def")
+    psip.process_input("/key2 2 def")
+    psip.process_input("/key3 3 def")
+    psip.process_input("/key4 4 def")
+    psip.process_input("maxlength")
+    assert psip.op_stack[-1] == 5
+
+def test_begin_and_end_operations():
+    psip.op_stack.clear()
+    psip.process_input("begin") # Extra Dict No 1 begin
+    psip.process_input("/key1 104 def")
+    psip.process_input("begin") # Extra Dict No 2 begin
+    psip.process_input("/key2 205 def")
+    psip.process_input("begin") # Extra Dict No 3 begin
+    psip.process_input("/key3 306 def")
+
+    assert len(psip.dict_stack) == 3
+    assert "/key3" in psip.dict_stack[-1]
+    assert "/key2" in psip.dict_stack[-2]
+    assert "/key1" in psip.dict_stack[-3]
+
+    psip.process_input("end") # Extra Dict No 3 end
+    assert len(psip.dict_stack) == 2
+    assert "/key3" not in psip.dict_stack[-1]
+    assert "/key2" in psip.dict_stack[-1]
+    assert "/key1" in psip.dict_stack[-2]
+
+    psip.process_input("end") # Extra Dict No 2 end
+    assert len(psip.dict_stack) == 1
+    assert "/key2" not in psip.dict_stack[-1]
+    assert "/key1" in psip.dict_stack[-1]
+
+    psip.process_input("end") # Extra Dict No 1 end
+    assert len(psip.dict_stack) == 1 # Only the global dict is left
+
+    try:
+        psip.process_input("end") # Then we test to see if we can invoke end again ...
+        assert False
+    except psip.TypeMismatch: # ... and pass the test if we can't!
+        pass
+
+def test_def_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("/key1 10 def")
+    assert "/key1" in psip.dict_stack[-1]
+    assert psip.dict_stack[-1]["key1"] == 10
+    
+    psip.process_input("/key2 20 def")
+    assert "/key2" in psip.dict_stack[-1]
+    assert psip.dict_stack[-1]["key2"] == 20
