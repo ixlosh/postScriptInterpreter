@@ -22,6 +22,11 @@ class DivisionBy0(Exception):
     def __init__(self, message):
         super().__init__(message)
 
+class IndexMissmatch(Exception):
+    """ Exception when the index is not applicable to the main string """
+    def __init__(self, message):
+        super().__init__(message)
+
 def repl():
     while True:
         user_input = input("REPL> ")
@@ -201,6 +206,8 @@ dict_stack[-1]["count"] = count_operation
 
 # Arithmetic Operations
 
+# add predefined
+
 def div_operation():
     if len(op_stack) >= 2:
         op1 = op_stack.pop()
@@ -330,18 +337,23 @@ def dict_operation():
 
 dict_stack[-1]["dict"] = dict_operation
 
+# This is an overlapping operation. It includes actions for both str and dict operands
+
 def length_operation():
     if len(op_stack) >= 1:
         op1 = op_stack.pop()
-        if isinstance(op1, dict):
-            res = len(op1)
+        if isinstance(op1, str):
+            op_stack.append(len(op1))
+        elif isinstance(op1, dict):
+            res = len({k: v for k, v in op1.items() if v is not None})
             op_stack.append(res)
         else:
-            raise TypeMismatch("length requires a dictionary operand")
+            raise TypeMismatch("Operand must either be a string or dictionary for length operation.")
     else:
-        raise TypeMismatch("length requires at least an operand to determine the length")
+        raise TypeMismatch("length operation requires at least one operand")
 
 dict_stack[-1]["length"] = length_operation
+
 
 def maxlength_operation():
     if len(op_stack) >= 1:
@@ -391,6 +403,60 @@ def def_operation():
 dict_stack[-1]["def"] = def_operation
 
 # String Operations
+
+# length under Dictionary Operations (refer to length under dict for further info)
+
+def get_operation():
+    if len(op_stack) >= 2:
+        index = op_stack.pop()
+        op1 = op_stack.pop()
+        if isinstance(op1, str) and isinstance(index, int):
+            if 0 <= index < len(op1):
+                op_stack.append(op1[index])
+            else:
+                raise IndexMissmatch("index not applicable to the given string")
+        else:
+            raise TypeMismatch("get requires a string and an integer index (in that order)")
+    else:
+        raise TypeMismatch("get operation requires at least two operands")
+
+dict_stack[-1]["get"] = get_operation
+
+def getinterval_operation():
+    if len(op_stack) >= 3:
+        count = op_stack.pop()
+        index = op_stack.pop()
+        op1 = op_stack.pop()
+        if isinstance(op1, str) and isinstance(index, int) and isinstance(count, int):
+            if 0 <= index < len(op1):
+                op_stack.append(op1[index:index + count])
+            else:
+                raise IndexMissmatch("index not applicable to the given string")
+        else:
+            raise TypeMismatch("getinterval requires a string, an integer index, and an integer count (in that order)")
+    else:
+        raise TypeMismatch("getinterval operation requires at least three operands")
+
+dict_stack[-1]["getinterval"] = getinterval_operation
+
+def putinterval_operation():
+    if len(op_stack) >= 3:
+        op2 = op_stack.pop()
+        index = op_stack.pop()
+        op1 = op_stack.pop()
+        if isinstance(op1, str) and isinstance(op2, str) and isinstance(index, int):
+            if 0 <= index <= len(op1):
+                op_stack.append(op1[:index] + op2 + op1[index + len(op2):]) # We do some splicing to get the desired final string
+            else:
+                raise IndexMissmatch("index not applicable to the string")
+        else:
+            raise TypeMismatch("putinterval requires two strings and an integer index (in that order)")
+    else:
+        raise TypeMismatch("putinterval requires at least three operands")
+
+dict_stack[-1]["putinterval"] = putinterval_operation
+
+# Bit and Boolean Operations
 
 if __name__ == "__main__":
     repl()

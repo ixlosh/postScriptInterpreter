@@ -143,14 +143,21 @@ def test_dict_operation():
 
 def test_length_operation():
     psip.op_stack.clear()
-    psip.process_input("5")
-    psip.process_input("dict")
-    psip.process_input("/key1 1 def")
-    psip.process_input("/key2 2 def")
-    psip.process_input("/key3 3 def")
-    psip.process_input("/key4 4 def")
+
+    psip.process_input('"hello"')
     psip.process_input("length")
-    assert psip.op_stack[-1] == 4
+    assert psip.op_stack[-1] == 5
+    
+    psip.process_input('"world"')
+    psip.process_input("length")
+    assert psip.op_stack[-1] == 5
+    
+    psip.process_input("begin")
+    psip.process_input("/key1 10 def")
+    psip.process_input("/key2 20 def")
+    psip.process_input("length")
+    assert psip.op_stack[-1] == 2
+    psip.process_input("end")
 
 def test_maxlength_operation():
     psip.op_stack.clear()
@@ -207,3 +214,46 @@ def test_def_operation():
     psip.process_input("/key2 20 def")
     assert "/key2" in psip.dict_stack[-1]
     assert psip.dict_stack[-1]["key2"] == 20
+
+def test_get_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input('"first"')
+    psip.process_input("3")
+    psip.process_input("get")
+    assert psip.op_stack[-1] == "s"
+    
+    psip.process_input('"mini"')
+    psip.process_input("0")
+    psip.process_input("get")
+    assert psip.op_stack[-1] == "m"
+
+def test_getinterval_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input('"first mini project"')
+    psip.process_input("0")
+    psip.process_input("5")
+    psip.process_input("getinterval")
+    assert psip.op_stack[-1] == "first"
+    
+    psip.process_input('"first mini project"')
+    psip.process_input("11")
+    psip.process_input("7")
+    psip.process_input("getinterval")
+    assert psip.op_stack[-1] == "project"
+
+def test_putinterval_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input('"first mini"')
+    psip.process_input("6")
+    psip.process_input('"project"')
+    psip.process_input("putinterval")
+    assert psip.op_stack[-1] == "first project"
+    
+    psip.process_input('"first project"')
+    psip.process_input("0")
+    psip.process_input('"mini"')
+    psip.process_input("putinterval")
+    assert psip.op_stack[-1] == "mini project"
