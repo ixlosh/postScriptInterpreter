@@ -370,7 +370,7 @@ def maxlength_operation():
         else:
             raise TypeMismatch("maxlength requires a dictionary operand")
     else:
-        raise TypeMismatch("maxlength requires at least an operand to determine the max length")
+        raise TypeMismatch("maxlength operation requires at least an operand to determine the max length")
 
 dict_stack[-1]["maxlength"] = maxlength_operation
 
@@ -398,7 +398,7 @@ def def_operation():
         else:
             raise TypeMismatch("Defining requires a name starting with a '/'")
     else:
-        raise TypeMismatch("def requires at least two operands (constant name and variable)")
+        raise TypeMismatch("def operation requires at least two operands (constant name and variable)")
     
 dict_stack[-1]["def"] = def_operation
 
@@ -452,11 +452,144 @@ def putinterval_operation():
         else:
             raise TypeMismatch("putinterval requires two strings and an integer index (in that order)")
     else:
-        raise TypeMismatch("putinterval requires at least three operands")
+        raise TypeMismatch("putinterval operation requires at least three operands")
 
 dict_stack[-1]["putinterval"] = putinterval_operation
 
 # Bit and Boolean Operations
+
+def eq_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+        op_stack.append(op1 == op2)
+    else:
+        raise TypeMismatch("eq operation requires at least two operands")
+
+dict_stack[-1]["eq"] = eq_operation
+
+def ne_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+        op_stack.append(op1 != op2)
+    else:
+        raise TypeMismatch("ne operation requires at least two operands")
+
+dict_stack[-1]["ne"] = ne_operation
+
+def ge_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+        if isinstance(op1, (int, float)) and isinstance(op2, (int, float)):
+            op_stack.append(op1 >= op2)
+        elif isinstance(op1, str) and isinstance(op2, str):
+            op_stack.append(op1 >= op2)
+        else:
+            raise TypeMismatch("ge operation requires operands of the same type (either both numbers or both strings)")
+    else:
+        raise TypeMismatch("ge operation requires at least two operands")
+
+dict_stack[-1]["ge"] = ge_operation
+
+def gt_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+        if isinstance(op1, (int, float)) and isinstance(op2, (int, float)):
+            op_stack.append(op1 > op2)
+        elif isinstance(op1, str) and isinstance(op2, str):
+            op_stack.append(op1 > op2)
+        else:
+            raise TypeMismatch("gt operation requires operands of the same type (either both numbers or both strings)")
+    else:
+        raise TypeMismatch("gt operation requires at least two operands")
+
+dict_stack[-1]["gt"] = gt_operation
+
+def le_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+        if isinstance(op1, (int, float)) and isinstance(op2, (int, float)):
+            op_stack.append(op1 <= op2)
+        elif isinstance(op1, str) and isinstance(op2, str):
+            op_stack.append(op1 <= op2)
+        else:
+            raise TypeMismatch("le operation requires operands of the same type (either both numbers or both strings)")
+    else:
+        raise TypeMismatch("le operation requires at least two operands")
+
+dict_stack[-1]["le"] = le_operation
+
+def lt_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+        if isinstance(op1, (int, float)) and isinstance(op2, (int, float)):
+            op_stack.append(op1 < op2)
+        elif isinstance(op1, str) and isinstance(op2, str):
+            op_stack.append(op1 < op2)
+        else:
+            raise TypeMismatch("lt operation requires operands of the same type (either both numbers or both strings)")
+    else:
+        raise TypeMismatch("lt operation requires at least two operands")
+
+dict_stack[-1]["lt"] = lt_operation
+
+def and_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+        
+        if isinstance(op1, bool) and isinstance(op2, bool):
+            op_stack.append(op1 and op2)
+        elif isinstance(op1, int) and isinstance(op2, int):
+            op_stack.append(op1 & op2)
+        else:
+            raise TypeMismatch("and operation requires operands of (bool ,bool) or (int, int)")
+    else:
+        raise TypeMismatch("and operation requires at least two operands")
+
+dict_stack[-1]["and"] = and_operation
+
+def not_operation():
+    if len(op_stack) >= 1:
+        op1 = op_stack.pop()
+        
+        if isinstance(op1, bool):
+            op_stack.append(not op1)
+        elif isinstance(op1, int):
+            op_stack.append(~op1)
+        else:
+            raise TypeMismatch("not operation requires either a boolean or an integer operand")
+    else:
+        raise TypeMismatch("not operation requires at least one operand")
+
+dict_stack[-1]["not"] = not_operation
+
+def or_operation():
+    if len(op_stack) >= 2:
+        op2 = op_stack.pop()
+        op1 = op_stack.pop()
+
+        if isinstance(op1, bool) and isinstance(op2, bool):
+            op_stack.append(op1 or op2)
+        elif isinstance(op1, int) and isinstance(op2, int):
+            op_stack.append(op1 | op2)
+        else:
+            raise TypeMismatch("or operation requires operand sof (bool, bool) or (int, int)")
+    else:
+        raise TypeMismatch("or operation requires at least two operands")
+
+dict_stack[-1]["or"] = or_operation
+
+# True & False operations are predefined
+
+# Flow control Operations
+
+
 
 if __name__ == "__main__":
     repl()

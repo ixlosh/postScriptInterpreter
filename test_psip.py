@@ -257,3 +257,186 @@ def test_putinterval_operation():
     psip.process_input('"mini"')
     psip.process_input("putinterval")
     assert psip.op_stack[-1] == "mini project"
+
+def test_eq_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("1")
+    psip.process_input("1")
+    psip.process_input("eq")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input('"project"')
+    psip.process_input('"projectio"')
+    psip.process_input("eq")
+    assert psip.op_stack[-1] == False
+
+def test_ne_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("1")
+    psip.process_input("1")
+    psip.process_input("ne")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input('"project"')
+    psip.process_input('"projectio"')
+    psip.process_input("ne")
+    assert psip.op_stack[-1] == True
+
+def test_ge_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("1")
+    psip.process_input("2")
+    psip.process_input("ge")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input("2")
+    psip.process_input("1")
+    psip.process_input("ge")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input('"a"')
+    psip.process_input('"b"')
+    psip.process_input("ge")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input('"b"')
+    psip.process_input('"a"')
+    psip.process_input("ge")
+    assert psip.op_stack[-1] == True
+
+def test_gt_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("1")
+    psip.process_input("2")
+    psip.process_input("gt")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input("2")
+    psip.process_input("1")
+    psip.process_input("gt")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input('"a"')
+    psip.process_input('"b"')
+    psip.process_input("gt")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input('"b"')
+    psip.process_input('"a"')
+    psip.process_input("gt")
+    assert psip.op_stack[-1] == True
+
+def test_le_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("1")
+    psip.process_input("2")
+    psip.process_input("le")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input("2")
+    psip.process_input("1")
+    psip.process_input("le")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input('"a"')
+    psip.process_input('"b"')
+    psip.process_input("le")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input('"b"')
+    psip.process_input('"a"')
+    psip.process_input("le")
+    assert psip.op_stack[-1] == False
+
+def test_lt_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("1")
+    psip.process_input("2")
+    psip.process_input("lt")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input("2")
+    psip.process_input("1")
+    psip.process_input("lt")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input('"a"')
+    psip.process_input('"b"')
+    psip.process_input("lt")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input('"b"')
+    psip.process_input('"a"')
+    psip.process_input("lt")
+    assert psip.op_stack[-1] == False
+
+def test_and_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("true")
+    psip.process_input("false")
+    psip.process_input("and")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input("true")
+    psip.process_input("true")
+    psip.process_input("and")
+    assert psip.op_stack[-1] == True
+
+    psip.process_input("1")
+    psip.process_input("1")
+    psip.process_input("and")
+    assert psip.op_stack[-1] == 1
+
+    psip.process_input("1")
+    psip.process_input("2")
+    psip.process_input("and")
+    assert psip.op_stack[-1] == 0
+
+def test_not_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("true")
+    psip.process_input("not")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input("false")
+    psip.process_input("not")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input("1")
+    psip.process_input("not")
+    assert psip.op_stack[-1] == -2
+    
+    psip.process_input("2")
+    psip.process_input("not")
+    assert psip.op_stack[-1] == -3
+
+def test_or_operation():
+    psip.op_stack.clear()
+    
+    psip.process_input("true")
+    psip.process_input("false")
+    psip.process_input("or")
+    assert psip.op_stack[-1] == True
+    
+    psip.process_input("false")
+    psip.process_input("false")
+    psip.process_input("or")
+    assert psip.op_stack[-1] == False
+    
+    psip.process_input("0")
+    psip.process_input("1")
+    psip.process_input("or")
+    assert psip.op_stack[-1] == 1
+
+    psip.process_input("2")
+    psip.process_input("3")
+    psip.process_input("or")
+    assert psip.op_stack[-1] == 3
