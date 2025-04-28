@@ -5,7 +5,7 @@ import math
 
 op_stack = []
 dict_stack = []
-dict_stack.append({})
+dict_stack.append({"capacity" : 999})
 
 class ParseFailed(Exception):
     """ Exception while parsing """
@@ -54,16 +54,9 @@ def process_number(input):
             return float_value
     except ValueError:
         raise ParseFailed("can't parse this into a number")
-    
-def process_code_block(input):
-    logging.debug(f"Input to process number: {input}")
-    if len(input) >= 2 and input.startswith("{") and input.endswith("}"):
-        return input[1:-1].strip().split()
-    else:
-        raise ParseFailed("can't parse this into a code block")
 
 def process_name_constant(input):
-    logging.debug(f"Input to process number: {input}")
+    logging.debug(f"Input to process name constant: {input}")
     if input.startswith("/"):
         return input
     else:
@@ -71,11 +64,10 @@ def process_name_constant(input):
     
 PARSERS = [
     process_boolean,
-    process_number,
-    process_code_block,
-    process_name_constant
+    process_name_constant,
+    process_number
 ]
-
+ 
 def process_constants(input):
     for parser in PARSERS:
         try:
@@ -99,17 +91,14 @@ def add_operation():
 dict_stack[-1]["add"] = add_operation
 
 def def_operation():
-    if len(op_stack) >= 2:
+    if len(op_stack) >= 2 and (int)(len(dict_stack[-1]) - 7) < dict_stack[-1]["capacity"]:
         value = op_stack.pop()
         name = op_stack.pop()
         if isinstance(name, str) and name.startswith("/"):
             key = name[1:]
             dict_stack[-1][key] = value
-        else:
-            op_stack.append(name)
-            op_stack.append(value)
     else:
-        raise TypeMismatch("Not enough operands for operation add")
+        raise TypeMismatch("Not enough operands or space in dictionary")
     
 dict_stack[-1]["def"] = def_operation
 
@@ -137,14 +126,16 @@ def lookup_in_dictionary(input):
         raise ParseFailed(f"input {input} is not in dictionary")
 
 def process_input(user_input):
-    try:
-        process_constants(user_input)
-    except ParseFailed as e:
-        logging.debug(e)
+    tokens = user_input.split()
+    for token in tokens:
         try:
-            lookup_in_dictionary(user_input)
-        except Exception as e:
-            logging.error(e)
+            process_constants(token)
+        except ParseFailed as e:
+            logging.debug(e)
+            try:
+                lookup_in_dictionary(token)
+            except Exception as e:
+                logging.error(e)
 
 # New Operations 
 # I will implement the functions in the order they appear in the command subset document
@@ -210,8 +201,8 @@ dict_stack[-1]["count"] = count_operation
 
 def div_operation():
     if len(op_stack) >= 2:
-        op1 = op_stack.pop()
         op2 = op_stack.pop()
+        op1 = op_stack.pop()
         if op2 != 0:
             res = op1 / op2
             op_stack.append(res)
@@ -224,9 +215,9 @@ dict_stack[-1]["div"] = div_operation
 
 def sub_operation():
     if len(op_stack) >= 2:
-        op1 = op_stack.pop()
         op2 = op_stack.pop()
-        res = op2 - op1
+        op1 = op_stack.pop()
+        res = op1 - op2
         op_stack.append(res)
     else:
         raise TypeMismatch("sub operations require at least to operands")
@@ -235,12 +226,12 @@ dict_stack[-1]["sub"] = sub_operation
 
 def idiv_operation():
     if len(op_stack) >= 2:
-        op1 = op_stack.pop()
         op2 = op_stack.pop()
+        op1 = op_stack.pop()
         op1 = int(op1) # We do this step to ensure that the values going  
         op2 = int(op2) # into idiv are also integers and not floats
-        if op1 != 0:
-            res = op2 // op1
+        if op2 != 0:
+            res = op1 // op2
             op_stack.append(res)
         else:
             raise DivisionBy0("Division by zero error")
@@ -327,55 +318,37 @@ dict_stack[-1]["sqrt"] = sqrt_operation
 
 def dict_operation():
     if len(op_stack) >= 1:
-        capacity = (int)(op_stack.pop())
+        capacity = int(op_stack.pop())
         if capacity <= 0:
             raise TypeMismatch("dict requires a positive integer argument for capacity")
-        new_dict = {i: None for i in range(capacity)}
-        op_stack.append(new_dict)
+        new_dict = {"capacity" : capacity , "begin" : begin_operation, "end" : end_operation, "length" : length_operation, "def" : def_operation, "=" : pop_and_print, "maxlength" : maxlength_operation}
+        dict_stack.append(new_dict)
     else:
-        raise TypeMismatch("dict requires at least on operand to determine the capacity")
+        raise TypeMismatch("dict requires at least one operand to determine the capacity")
 
 dict_stack[-1]["dict"] = dict_operation
 
-# This is an overlapping operation. It includes actions for both str and dict operands
 
 def length_operation():
     if len(op_stack) >= 1:
         op1 = op_stack.pop()
         if isinstance(op1, str):
-            op_stack.append(len(op1))
-        elif isinstance(op1, dict):
-            res = len({k: v for k, v in op1.items() if v is not None})
-            op_stack.append(res)
+            op_stack.append((int)(len(op1[1:])))
         else:
-            raise TypeMismatch("Operand must either be a string or dictionary for length operation.")
+            raise TypeMismatch("Operand must be a string length operation (or the stack is empty for dictionary)")
     else:
-        raise TypeMismatch("length operation requires at least one operand")
+        op_stack.append((int)(len(dict_stack[-1]) - 7)) # Sub 7 for adjustment
 
 dict_stack[-1]["length"] = length_operation
 
 
 def maxlength_operation():
-    if len(op_stack) >= 1:
-        op1 = op_stack.pop()
-        if isinstance(op1, dict):
-            keys = list(op1.keys()) # I have opted to go with the keys method to find the max length
-            if keys:
-                min_key = min(keys)
-                max_key = max(keys)
-                capacity = max_key - min_key + 1
-                op_stack.append(capacity)
-            else:
-                op_stack.append(0)
-        else:
-            raise TypeMismatch("maxlength requires a dictionary operand")
-    else:
-        raise TypeMismatch("maxlength operation requires at least an operand to determine the max length")
+        op_stack.append(dict_stack[-1]["capacity"])
 
 dict_stack[-1]["maxlength"] = maxlength_operation
 
 def begin_operation():
-    new_dict = {}
+    new_dict = {"capacity" : 999, "begin" : begin_operation, "end" : end_operation, "length" : length_operation, "def" : def_operation, "=" : pop_and_print, "maxlength" : maxlength_operation}
     dict_stack.append(new_dict)
 
 dict_stack[-1]["begin"] = begin_operation
@@ -388,19 +361,7 @@ def end_operation():
 
 dict_stack[-1]["end"] = end_operation
 
-def def_operation():
-    if len(op_stack) >= 2:
-        value = op_stack.pop()
-        name = op_stack.pop()
-        if isinstance(name, str) and name.startswith("/"):
-            key = name[1:]
-            dict_stack[-1][key] = value
-        else:
-            raise TypeMismatch("Defining requires a name starting with a '/'")
-    else:
-        raise TypeMismatch("def operation requires at least two operands (constant name and variable)")
-    
-dict_stack[-1]["def"] = def_operation
+# def operation is predefined
 
 # String Operations
 
@@ -411,8 +372,9 @@ def get_operation():
         index = op_stack.pop()
         op1 = op_stack.pop()
         if isinstance(op1, str) and isinstance(index, int):
-            if 0 <= index < len(op1):
-                op_stack.append(op1[index])
+            string = op1[1:]
+            if 0 <= index < len(string):
+                op_stack.append("/" + string[index])
             else:
                 raise IndexMissmatch("index not applicable to the given string")
         else:
@@ -428,8 +390,9 @@ def getinterval_operation():
         index = op_stack.pop()
         op1 = op_stack.pop()
         if isinstance(op1, str) and isinstance(index, int) and isinstance(count, int):
-            if 0 <= index < len(op1):
-                op_stack.append(op1[index:index + count])
+            string = op1[1:]
+            if 0 <= index < len(string):
+                op_stack.append("/" + string[index:index + count])
             else:
                 raise IndexMissmatch("index not applicable to the given string")
         else:
@@ -445,8 +408,10 @@ def putinterval_operation():
         index = op_stack.pop()
         op1 = op_stack.pop()
         if isinstance(op1, str) and isinstance(op2, str) and isinstance(index, int):
+            string1 = op1[1:]
+            string2 = op2[1:]
             if 0 <= index <= len(op1):
-                op_stack.append(op1[:index] + op2 + op1[index + len(op2):]) # We do some splicing to get the desired final string
+                op_stack.append("/" + string1[:index] + string2 + string1[index + len(string2):]) # We do some splicing to get the desired final string
             else:
                 raise IndexMissmatch("index not applicable to the string")
         else:
@@ -579,7 +544,7 @@ def or_operation():
         elif isinstance(op1, int) and isinstance(op2, int):
             op_stack.append(op1 | op2)
         else:
-            raise TypeMismatch("or operation requires operand sof (bool, bool) or (int, int)")
+            raise TypeMismatch("or operation requires operands of (bool, bool) or (int, int)")
     else:
         raise TypeMismatch("or operation requires at least two operands")
 
@@ -589,6 +554,85 @@ dict_stack[-1]["or"] = or_operation
 
 # Flow control Operations
 
+def if_operation(): 
+    if len(op_stack) >= 2:
+        code_array = op_stack.pop()
+        condition = op_stack.pop()
+        
+        # Use code arrays in the format "/var1,var2,operation"
+
+        if isinstance(condition, bool) and isinstance(code_array, str):
+            if condition:
+                string = code_array[1:]
+                tokens = string.split(",") 
+                for token in tokens:
+                    process_input(token)
+        else:
+            raise TypeMismatch("if requires a boolean and a code string")
+    else:
+        raise TypeMismatch("if operation requires at least two operands")
+        
+dict_stack[-1]["if"] = if_operation
+
+def ifelse_operation():
+    if len(op_stack) >= 3:
+        false_code = op_stack.pop()
+        true_code = op_stack.pop()
+        condition = op_stack.pop()
+        
+        if isinstance(condition, bool) and isinstance(true_code, str) and isinstance(false_code, str):
+            string = true_code[1:] if condition else false_code[1:]
+            tokens = string.split(",")
+            for token in tokens:
+                process_input(token)
+        else:
+            raise TypeMismatch("ifelse requires a boolean and two code strings")
+    else:
+        raise TypeMismatch("ifelse operation requires at least three operands")
+
+dict_stack[-1]["ifelse"] = ifelse_operation
+
+def for_operation():
+    if len(op_stack) >= 4:
+        proc_array = op_stack.pop()
+        limit = op_stack.pop()
+        step = op_stack.pop()
+        starting = op_stack.pop()
+
+        if isinstance(starting, (int, float)) and isinstance(limit, (int, float)) and isinstance(step, (int, float)) and isinstance(proc_array, str):
+            i = starting
+
+            while i <= limit:
+                string = proc_array[1:]
+                tokens = string.split(",")
+                for token in tokens:
+                    process_input(token)
+                i += step
+
+        else:
+            raise TypeMismatch("for requires two numbers and a code string")
+    else:
+        raise TypeMismatch("for operation requires at least three operands")
+
+dict_stack[-1]["for"] = for_operation
+
+def repeat_operation():
+    if len(op_stack) >= 2:
+        code_array = op_stack.pop()
+        count = op_stack.pop()
+
+        if isinstance(count, int) and isinstance(code_array, str):
+            for _ in range(count):
+                string = code_array[1:]
+                tokens = string.split(",")
+                for token in tokens:
+                    process_input(token)
+        else:
+            raise TypeMismatch("repeat requires an integer and a code string")
+    else:
+        raise TypeMismatch("repeat operation requires at least two operands")
+
+dict_stack[-1]["repeat"] = repeat_operation
 
 
 if __name__ == "__main__":
