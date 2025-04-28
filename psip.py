@@ -3,6 +3,8 @@ logging.basicConfig(level = logging.INFO)
 
 import math
 
+dynamic_scoping = True # This is the initial intended behavior of the language
+
 op_stack = []
 dict_stack = []
 dict_stack.append({"capacity" : 999})
@@ -112,18 +114,33 @@ def pop_and_print():
 dict_stack[-1]["="] = pop_and_print
 
 def lookup_in_dictionary(input):
-    top_dict = dict_stack[-1]
-    if input in top_dict:
-        value = top_dict[input]
-        if callable(value):
-            value()
-        elif isinstance(value, list):
-            for item in value:
-                process_input(item)
+    if dynamic_scoping:
+        top_dict = dict_stack[-1]
+        if input in top_dict:
+            value = top_dict[input]
+            if callable(value):
+                value()
+            elif isinstance(value, list):
+                for item in value:
+                    process_input(item)
+            else:
+                op_stack.append(value)
         else:
-            op_stack.append(value)
-    else:
-        raise ParseFailed(f"input {input} is not in dictionary")
+            raise ParseFailed(f"input {input} is not in dictionary")
+    else: # Lexical scoping
+        for i in reversed(dict_stack): # Flip the order for lexicality
+            if input in i:
+                value = i[input]
+                if callable(value):
+                    value()
+                elif isinstance(value, list):
+                    for item in value:
+                        process_input(item)
+                else:
+                    op_stack.append(value)
+            else: 
+                raise ParseFailed(f"input {input} is not in any dictionary")
+
 
 def process_input(user_input):
     tokens = user_input.split()
@@ -138,6 +155,20 @@ def process_input(user_input):
                 logging.error(e)
 
 # New Operations 
+
+# Lexicality
+
+def set_lexical():
+    global dynamic_scoping
+    dynamic_scoping = False
+
+def set_dynamic():
+    global dynamic_scoping
+    dynamic_scoping = True
+
+dict_stack[-1]["dynamicoff"] = set_lexical
+dict_stack[-1]["dynamicon"] = set_dynamic
+
 # I will implement the functions in the order they appear in the command subset document
 
 # Stack Manipulation
@@ -634,6 +665,15 @@ def repeat_operation():
 
 dict_stack[-1]["repeat"] = repeat_operation
 
+# Extra Functions
+
+def get_scoping_status():
+    if dynamic_scoping:
+        print("Current Scoping: Dynamically Scoped")
+    else:
+        print("Current Scoping: Lexically Scoped")
+
+dict_stack[-1]["scopingstatus"] = get_scoping_status
 
 if __name__ == "__main__":
     repl()
