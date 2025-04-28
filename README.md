@@ -1,70 +1,66 @@
-# postScriptInterpreter
-This is the README file for my postscript interpreter implementation for CPTS 355 mini project. Below are the explanations of the calls the interpreter natively understands.
-
 ## Functions and Operations
 
 ### REPL
-- `repl` : Read-Eval-Print Loop, reads user input, processes it, repeats until `quit`.
+- `repl`: Starts the REPL, reads input, processes it, and continues until `quit`.
 
 ### Error Handling
-- `ParseFailed` : raised when an input token cannot be parsed.
-- `TypeMismatch` : raised when an operation sees the wrong number or types of operands.
-- `DivisionBy0` : raised when a division or integer-division by zero is attempted.
-- `IndexMissmatch` : raised when a string index or interval is out of bounds.
+- `ParseFailed`: Raised when input parsing fails.
+- `TypeMismatch`: Raised for incorrect operand types or numbers.
+- `DivisionBy0`: Raised when division by zero is attempted.
+- `IndexMissmatch`: Raised when a string index is out of bounds.
 
-### Stack Manipulation
-- `add` : pop two values, push their sum.
-- `exch` : swap the top two values on the stack.
-- `pop` : remove the top value.
-- `copy` : duplicate the top _n_ values.
-- `dup` : duplicate the top value.
-- `clear` : remove all values.
-- `count` : push the current stack depth.
+### Stack Operations
+- `add`: Adds the top two values on the stack.
+- `exch`: Swaps the top two values.
+- `pop`: Removes the top value from the stack.
+- `copy`: Duplicates the top n values.
+- `dup`: Duplicates the top value.
+- `clear`: Clears the stack.
+- `count`: Pushes the current stack size.
 
-### Arithmetic
-- `sub` : pop two values, push their difference.
-- `mul` : pop two values, push their product.
-- `div` : pop two values, push their quotient (real division).
-- `idiv` : pop two values, convert to int, push integer quotient.
-- `abs` : pop one value, push its absolute.
-- `neg` : pop one value, push its negation.
-- `ceiling` : pop one value, push ⌈_x_⌉.
-- `floor` : pop one value, push ⌊_x_⌋.
-- `round` : pop one value, push round(_x_).
-- `sqrt` : pop one value, push √_x_ (error if _x_<0).
+### Arithmetic Operations
+- `sub`: Subtracts the top two values on the stack.
+- `mul`: Multiplies the top two values on the stack.
+- `div`: Divides the top two values on the stack.
+- `idiv`: Integer division for the top two values.
+- `abs`: Pushes the absolute value of the top value.
+- `neg`: Negates the top value.
+- `ceiling`: Pushes the ceiling of the top value.
+- `floor`: Pushes the floor of the top value.
+- `round`: Rounds the top value.
+- `sqrt`: Pushes the square root of the top value (error if negative).
 
-### Dictionary Management
-- `dict` : pop an integer _n_, create a new dictionary of capacity _n_ and push it on the dict stack.
-- `begin` : start a new dictionary scope.
-- `end` : end the current dictionary scope.
-- `def` : pop `/name` and a value, bind in the current dict.
-- `length` : for strings: pop `"(…)"`, push its length; for dicts: push number of bindings.
-- `maxlength` : push the capacity of the current dict.
+### Dictionary Operations
+- `dict`: Creates a new dictionary with a given size and pushes it to the stack.
+- `begin`: Starts a new dictionary scope.
+- `end`: Ends the current dictionary scope.
+- `def`: Defines a new binding in the current dictionary.
+- `length`: Pushes the length of a string or dictionary size.
+- `maxlength`: Pushes the maximum size of the current dictionary.
 
 ### String Operations
-- `get` : pop `"(…)"` and _i_, push the character at index _i_.
-- `getinterval` : pop `"(…)"`, start index, count; push the substring.
-- `putinterval` : pop `"(…)"`, start index, `"(…)"`; replace that interval and push the new string.
+- `get`: Retrieves a character from a string at a specific index.
+- `getinterval`: Retrieves a substring based on start index and length.
+- `putinterval`: Replaces a substring within a string.
 
-### Bit & Boolean
-- `eq` : pop two values, push equality.
-- `ne` : pop two values, push inequality.
-- `gt` : pop two values (numbers or strings), push greater-than comparison.
-- `ge` : pop two values (numbers or strings), push greater-than-or-equal comparison.
-- `lt` : pop two values (numbers or strings), push less-than comparison.
-- `le` : pop two values (numbers or strings), push less-than-or-equal comparison.
-- `and` : logical AND on booleans, bitwise AND on integers.
-- `or` : logical OR on booleans, bitwise OR on integers.
-- `not` : logical NOT on booleans, bitwise NOT on integers.
+### Bitwise & Boolean Operations
+- `eq`: Checks if the top two values are equal.
+- `ne`: Checks if the top two values are not equal.
+- `gt`: Checks if the first value is greater than the second.
+- `ge`: Checks if the first value is greater than or equal to the second.
+- `lt`: Checks if the first value is less than the second.
+- `le`: Checks if the first value is less than or equal to the second.
+- `and`: Performs logical AND for booleans or bitwise AND for integers.
+- `or`: Performs logical OR for booleans or bitwise OR for integers.
+- `not`: Performs logical NOT for booleans or bitwise NOT for integers.
 
 ### Flow Control
-- `if` : pop `{…}` and a boolean; if true, execute the code string.
-- `ifelse` : pop two `{…}` strings and a boolean; execute the first or second.
-- `for` : pop starting, step, limit, `{…}`; loop _i_ from start to limit by step, executing the code each time.
-- `repeat` : pop `{…}` and an integer _n_; execute the code _n_ times.
+- `if`: Executes a code block if the condition is true.
+- `ifelse`: Executes one of two code blocks based on a condition.
+- `for`: Loops over a range and executes a code block for each iteration.
+- `repeat`: Repeats a code block a specified number of times.
 
 ### Scoping Controls
-- `dynamicon` : switch to dynamic scoping (default).
-- `dynamicoff` : switch to lexical scoping.
-- `scopingstatus` : print whether scoping is dynamic or lexical.
-
+- `dynamicon`: Enables dynamic scoping.
+- `dynamicoff`: Disables dynamic scoping.
+- `scopingstatus`: Displays the current scoping type (dynamic or lexical).
